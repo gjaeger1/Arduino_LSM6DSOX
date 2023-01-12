@@ -69,6 +69,44 @@ LSM6DSOXClass::~LSM6DSOXClass()
 {
 }
 
+void LSM6DSOXClass::setAccelerationFrequency(float freq)
+{
+  _accHz = freq;
+}
+
+int LSM6DSOXClass::getAccelerationFrequencyBinary()
+{
+  if(_accHz <= 104)
+  {
+    return 0x40;
+  }
+  else if(_accHz <= 208)
+  {
+    return 0x50;
+  }
+  else if(_accHz <= 416)
+  {
+    return 0x60;
+  }
+  else if(_accHz <= 833)
+  {
+    return 0x60;
+  }
+  else if(_accHz <= 1660)
+  {
+    return 0x70;
+  }
+  else if(_accHz <= 3330)
+  {
+    return 0x80;
+  }
+  else if(_accHz <= 6660)
+  {
+    return 0x90;
+  }  
+  return 0x40;
+}
+
 int LSM6DSOXClass::begin()
 {
   if (_spi != NULL) {
@@ -89,7 +127,8 @@ int LSM6DSOXClass::begin()
 
   // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
   // low pass filter (check figure9 of LSM6DSOX's datasheet)
-  writeRegister(LSM6DSOX_CTRL1_XL, 0x4A);
+  int c = getAccelerationFrequencyBinary() | 0x0A;
+  writeRegister(LSM6DSOX_CTRL1_XL, c);
 
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
   writeRegister(LSM6DSOX_CTRL7_G, 0x00);

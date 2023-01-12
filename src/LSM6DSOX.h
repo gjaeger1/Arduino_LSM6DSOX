@@ -31,6 +31,7 @@ class LSM6DSOXClass {
     void end();
 
     // Accelerometer
+    void setAccelerationFrequency(float freq);
     int readAcceleration(float& x, float& y, float& z); // Results are in g (earth gravity).
     float accelerationSampleRate(); // Sampling rate of the sensor.
     int accelerationAvailable(); // Check for available data from accelerometer
@@ -52,11 +53,14 @@ class LSM6DSOXClass {
 
 
   private:
+    int getAccelerationFrequencyBinary();
+  
     TwoWire* _wire;
     SPIClass* _spi;
     uint8_t _slaveAddress;
     int _csPin;
     int _irqPin;
+    float _accHz = 104;
 
     SPISettings _spiSettings;
 };
