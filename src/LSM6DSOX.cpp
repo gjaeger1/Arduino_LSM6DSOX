@@ -69,40 +69,45 @@ LSM6DSOXClass::~LSM6DSOXClass()
 {
 }
 
-void LSM6DSOXClass::setAccelerationFrequency(float freq)
+void LSM6DSOXClass::setAccelerationFrequency(const int freq)
 {
   _accHz = freq;
 }
 
-int LSM6DSOXClass::getAccelerationFrequencyBinary()
+void LSM6DSOXClass::setGyroscopeFrequency(const int freq)
 {
-  if(_accHz <= 104)
+  _gyrHz = freq;
+}
+
+int LSM6DSOXClass::getFrequencyBinary(const int hz) const
+{
+  if(hz <= 104)
   {
     return 0x40;
   }
-  else if(_accHz <= 208)
+  else if(hz <= 208)
   {
     return 0x50;
   }
-  else if(_accHz <= 416)
+  else if(hz <= 416)
   {
     return 0x60;
   }
-  else if(_accHz <= 833)
-  {
-    return 0x60;
-  }
-  else if(_accHz <= 1660)
+  else if(hz <= 833)
   {
     return 0x70;
   }
-  else if(_accHz <= 3330)
+  else if(hz <= 1660)
   {
     return 0x80;
   }
-  else if(_accHz <= 6660)
+  else if(hz <= 3330)
   {
     return 0x90;
+  }
+  else if(hz <= 6660)
+  {
+    return 0xA0;
   }  
   return 0x40;
 }
@@ -123,18 +128,19 @@ int LSM6DSOXClass::begin()
   }
 
   //set the gyroscope control register to work at 104 Hz, 2000 dps and in bypass mode
-  writeRegister(LSM6DSOX_CTRL2_G, 0x4C);
-
-  // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
-  // low pass filter (check figure9 of LSM6DSOX's datasheet)
-  int c = getAccelerationFrequencyBinary() | 0x0A;
-  writeRegister(LSM6DSOX_CTRL1_XL, c);
+  int c = getFrequencyBinary(_gyrHz) | 0x0C;
+  writeRegister(LSM6DSOX_CTRL2_G, c);
 
   // set gyroscope power mode to high performance and bandwidth to 16 MHz
   writeRegister(LSM6DSOX_CTRL7_G, 0x00);
 
-  // Set the ODR config register to ODR/4
-  writeRegister(LSM6DSOX_CTRL8_XL, 0x09);
+  // Set the Accelerometer control register to work at 104 Hz, 4 g,and in bypass mode and enable ODR/4
+  // low pass filter (check figure9 of LSM6DSOX's datasheet)
+  c = getFrequencyBinary(_accHz) | 0x0A;
+  writeRegister(LSM6DSOX_CTRL1_XL, c);
+
+  // Set the ODR config register to ODR/4 (0x09) or ODR/100 (0x89) or ODR/800
+  writeRegister(LSM6DSOX_CTRL8_XL, 0xE9);
 
   return 1;
 }
@@ -180,9 +186,14 @@ int LSM6DSOXClass::accelerationAvailable()
   return 0;
 }
 
-float LSM6DSOXClass::accelerationSampleRate()
+int LSM6DSOXClass::accelerationSampleRate()
 {
-  return 104.0F;
+  return _accHz;
+}
+
+int LSM6DSOXClass::gyroscopeSampleRate()
+{
+  return _gyrHz;
 }
 
 int LSM6DSOXClass::readGyroscope(float& x, float& y, float& z)
@@ -248,11 +259,6 @@ int LSM6DSOXClass::temperatureAvailable()
   }
 
   return 0;
-}
-
-float LSM6DSOXClass::gyroscopeSampleRate()
-{
-  return 104.0F;
 }
 
 int LSM6DSOXClass::readRegister(uint8_t address)

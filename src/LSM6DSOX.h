@@ -31,14 +31,15 @@ class LSM6DSOXClass {
     void end();
 
     // Accelerometer
-    void setAccelerationFrequency(float freq);
+    void setAccelerationFrequency(const int freq);
     int readAcceleration(float& x, float& y, float& z); // Results are in g (earth gravity).
-    float accelerationSampleRate(); // Sampling rate of the sensor.
+    int accelerationSampleRate(); // Sampling rate of the sensor.
     int accelerationAvailable(); // Check for available data from accelerometer
 
     // Gyroscope
+    void setGyroscopeFrequency(const int freq);
     int readGyroscope(float& x, float& y, float& z); // Results are in degrees/second.
-    float gyroscopeSampleRate(); // Sampling rate of the sensor.
+    int gyroscopeSampleRate(); // Sampling rate of the sensor.
     int gyroscopeAvailable(); // Check for available data from gyroscope
 
     // Temperature
@@ -53,14 +54,15 @@ class LSM6DSOXClass {
 
 
   private:
-    int getAccelerationFrequencyBinary();
+    int getFrequencyBinary(const int hz) const;
   
     TwoWire* _wire;
     SPIClass* _spi;
     uint8_t _slaveAddress;
     int _csPin;
     int _irqPin;
-    float _accHz = 104;
+    int _accHz = 104;
+    int _gyrHz = 104;
 
     SPISettings _spiSettings;
 };
