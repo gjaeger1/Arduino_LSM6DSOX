@@ -1,3 +1,5 @@
+#pragma once
+
 /*
   This file is part of the Arduino_LSM6DSOX library.
   Copyright (c) 2021 Arduino SA. All rights reserved.
@@ -17,14 +19,14 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include <Arduino.h>
-#include <Wire.h>
-#include <SPI.h>
+#ifdef ADMORPH_PLATFORM_IS_PICO
+    #include "pico/binary_info.h"
+    #include "hardware/i2c.h"
+#endif
 
 class LSM6DSOXClass {
   public:
-    LSM6DSOXClass(TwoWire& wire, uint8_t slaveAddress);
-    LSM6DSOXClass(SPIClass& spi, int csPin, int irqPin);
+    LSM6DSOXClass(uint8_t slaveAddress);
     ~LSM6DSOXClass();
 
     int begin();
@@ -56,15 +58,10 @@ class LSM6DSOXClass {
   private:
     int getFrequencyBinary(const int hz) const;
   
-    TwoWire* _wire;
-    SPIClass* _spi;
     uint8_t _slaveAddress;
-    int _csPin;
-    int _irqPin;
     int _accHz = 104;
     int _gyrHz = 104;
-
-    SPISettings _spiSettings;
+    i2c_inst_t* i2c_instance;
 };
 
 extern LSM6DSOXClass IMU_LSM6DSOX;

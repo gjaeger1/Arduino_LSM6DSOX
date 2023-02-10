@@ -49,19 +49,8 @@
 #define LSM6DSOX_OUTZ_H_XL          0X2D
 
 
-LSM6DSOXClass::LSM6DSOXClass(TwoWire& wire, uint8_t slaveAddress) :
-  _wire(&wire),
-  _spi(NULL),
+LSM6DSOXClass::LSM6DSOXClass(uint8_t slaveAddress) :
   _slaveAddress(slaveAddress)
-{
-}
-
-LSM6DSOXClass::LSM6DSOXClass(SPIClass& spi, int csPin, int irqPin) :
-  _wire(NULL),
-  _spi(&spi),
-  _csPin(csPin),
-  _irqPin(irqPin),
-  _spiSettings(10E6, MSBFIRST, SPI_MODE0)
 {
 }
 
@@ -274,54 +263,20 @@ int LSM6DSOXClass::readRegister(uint8_t address)
 
 int LSM6DSOXClass::readRegisters(uint8_t address, uint8_t* data, size_t length)
 {
-  if (_spi != NULL) {
-    _spi->beginTransaction(_spiSettings);
-    digitalWrite(_csPin, LOW);
-    _spi->transfer(0x80 | address);
-    _spi->transfer(data, length);
-    digitalWrite(_csPin, HIGH);
-    _spi->endTransaction();
-  } else {
-    _wire->beginTransmission(_slaveAddress);
-    _wire->write(address);
-
-    if (_wire->endTransmission(false) != 0) {
-      return -1;
-    }
-
-    if (_wire->requestFrom(_slaveAddress, length) != length) {
-      return 0;
-    }
-
-    for (size_t i = 0; i < length; i++) {
-      *data++ = _wire->read();
-    }
-  }
+  int res = i2c_write_blocking(this->instance, _slaveAddress, &address, sizeof(uint8_t), true);
+  i2c_read_blocking(this->instance, _slaveAddress, data, sizeof(uint8_t)*length, false);
   return 1;
 }
 
 int LSM6DSOXClass::writeRegister(uint8_t address, uint8_t value)
 {
-  if (_spi != NULL) {
-    _spi->beginTransaction(_spiSettings);
-    digitalWrite(_csPin, LOW);
-    _spi->transfer(address);
-    _spi->transfer(value);
-    digitalWrite(_csPin, HIGH);
-    _spi->endTransaction();
-  } else {
-    _wire->beginTransmission(_slaveAddress);
-    _wire->write(address);
-    _wire->write(value);
-    if (_wire->endTransmission() != 0) {
-      return 0;
-    }
-  }
+  int res = i2c_write_blocking(this->instance, _slaveAddress, &address, sizeof(uint8_t), true);
+  res = i2c_write_blocking(this->instance, _slaveAddress, &value, sizeof(uint8_t), true);
   return 1;
 }
 
 #ifdef LSM6DS_DEFAULT_SPI
 LSM6DSOXClass IMU_LSM6DSOX(LSM6DS_DEFAULT_SPI, PIN_SPI_SS1, LSM6DS_INT);
 #else
-LSM6DSOXClass IMU_LSM6DSOX(Wire, LSM6DSOX_ADDRESS);
+LSM6DSOXClass IMU_LSM6DSOX(LSM6DSOX_ADDRESS);
 #endif
