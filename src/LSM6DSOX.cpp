@@ -18,6 +18,7 @@
 */
 
 #include "LSM6DSOX.h"
+#include <cmath>
 
 #define LSM6DSOX_ADDRESS            0x6A
 
@@ -103,13 +104,6 @@ int LSM6DSOXClass::getFrequencyBinary(const int hz) const
 
 int LSM6DSOXClass::begin()
 {
-  if (_spi != NULL) {
-    pinMode(_csPin, OUTPUT);
-    digitalWrite(_csPin, HIGH);
-    _spi->begin();
-  } else {
-    _wire->begin();
-  }
 
   if (!(readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x6C || readRegister(LSM6DSOX_WHO_AM_I_REG) == 0x69)) {
     end();
@@ -136,15 +130,6 @@ int LSM6DSOXClass::begin()
 
 void LSM6DSOXClass::end()
 {
-  if (_spi != NULL) {
-    _spi->end();
-    digitalWrite(_csPin, LOW);
-    pinMode(_csPin, INPUT);
-  } else {
-    writeRegister(LSM6DSOX_CTRL2_G, 0x00);
-    writeRegister(LSM6DSOX_CTRL1_XL, 0x00);
-    _wire->end();
-  }
 }
 
 int LSM6DSOXClass::readAcceleration(float& x, float& y, float& z)
@@ -263,15 +248,15 @@ int LSM6DSOXClass::readRegister(uint8_t address)
 
 int LSM6DSOXClass::readRegisters(uint8_t address, uint8_t* data, size_t length)
 {
-  int res = i2c_write_blocking(this->instance, _slaveAddress, &address, sizeof(uint8_t), true);
-  i2c_read_blocking(this->instance, _slaveAddress, data, sizeof(uint8_t)*length, false);
+  int res = i2c_write_blocking(this->i2c_instance, _slaveAddress, &address, sizeof(uint8_t), true);
+  i2c_read_blocking(this->i2c_instance, _slaveAddress, data, sizeof(uint8_t)*length, false);
   return 1;
 }
 
 int LSM6DSOXClass::writeRegister(uint8_t address, uint8_t value)
 {
-  int res = i2c_write_blocking(this->instance, _slaveAddress, &address, sizeof(uint8_t), true);
-  res = i2c_write_blocking(this->instance, _slaveAddress, &value, sizeof(uint8_t), true);
+  int res = i2c_write_blocking(this->i2c_instance, _slaveAddress, &address, sizeof(uint8_t), true);
+  res = i2c_write_blocking(this->i2c_instance, _slaveAddress, &value, sizeof(uint8_t), true);
   return 1;
 }
 
